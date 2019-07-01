@@ -30,7 +30,7 @@ class Dataset:
                 y = 16 * j
                 for i in range(size_w):
                     x = 26 * i
-                    patch = image[y:y+16, x:x+26]
+                    patch = filtered_image[y:y+16, x:x+26]
                     # (16, 26)
                     # print(patch.shape)
                     patches[j*size_w + i] = patch
