@@ -11,9 +11,11 @@ class Dataset:
 
     def load_images(self):
         images = np.empty([5,408,512])
+        #images = np.empty([5,512,512])
         
         for i in range(len(images)):
-            image = cv2.imread("data/image{}.png".format(i))
+            image = cv2.imread("data/images_rao/image{}.png".format(i))
+            #image = cv2.imread("data/images_aa/image{}.png".format(i))
             #image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY).astype(np.float32) / 255.0
             image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY).astype(np.float32)
             images[i] = image
