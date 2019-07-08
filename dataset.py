@@ -5,19 +5,20 @@ import cv2
 
 
 class Dataset:
-    def __init__(self):
-        self.load_images()
+    def __init__(self, normalize=False):
+        self.load_images(normalize)
         #self.load_matlab()
 
-    def load_images(self):
+    def load_images(self, normalize):
         images = np.empty([5,408,512])
         #images = np.empty([5,512,512])
         
         for i in range(len(images)):
             image = cv2.imread("data/images_rao/image{}.png".format(i))
             #image = cv2.imread("data/images_aa/image{}.png".format(i))
-            #image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY).astype(np.float32) / 255.0
             image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY).astype(np.float32)
+            if normalize:
+                image = image / 255.0
             images[i] = image
 
         self.load_sub(images)
