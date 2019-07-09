@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-from scipy import io
 import cv2
 
 
@@ -18,19 +17,21 @@ class Dataset:
             images[i] = image
         self.load_sub(images, scale)
 
-    def create_gauss_mask(self, width=16, sigma=0.4): 
-        rates = [0.0] * (width * width)
+    def create_gauss_mask(self, sigma=0.4):
+        """ Create gaussian mask. """
+        width = 16
+        mask = [0.0] * (width * width)
         hw = width // 2
         for i in range(width):
             x = (i - hw) / float(hw)
             for j in range(width):
                 y = (j - hw) / float(hw)
                 r = np.sqrt(x*x + y*y)
-                rates[j*width + i] = self.gauss(r, sigma=sigma)
-        rates = np.array(rates)
+                mask[j*width + i] = self.gauss(r, sigma=sigma)
+        mask = np.array(mask)
         # Normalize
-        rates = rates / np.max(rates)
-        return rates
+        mask = mask / np.max(mask)
+        return mask
 
     def gauss(self, x, sigma):
         sigma_sq = sigma * sigma
@@ -79,18 +80,40 @@ class Dataset:
         """
         patch = self.patches[patch_index]
         x = 5 * image_index
+        # Apply gaussian mask
         return patch[:, x:x+16].reshape([-1]) * self.mask
 
-    def load_matlab(self, scale):
-        file_path = "./data/IMAGES_RAW.mat"
-        matdata = io.loadmat(file_path)
-
-        images = matdata['IMAGESr'].astype(np.float32)
-        # Change image order
-        images = np.array([images[:,:,i] for i in range(images.shape[2])])
-        self.load_sub(images, scale)
+    def get_bar_image(self, is_short, image_index):
+        bar_patch = self.get_bar_patch(is_short)
+        x = 5 * image_index
+        # TODO: Maskを適用するかどうか要検討
+        return bar_patch[:, x:x+16].reshape([-1])
 
     def apply_DoG_filter(self, gray, ksize=(5,5), sigma1=1.3, sigma2=2.6):
+        """
+        Apply difference of gaussian (DoG) filter detect edge of the image.
+        """
         g1 = cv2.GaussianBlur(gray, ksize, sigma1)
         g2 = cv2.GaussianBlur(gray, ksize, sigma2)
         return g1 - g2
+
+    def get_bar_patch(self, is_short, scale=2.0):
+        """ 
+        Get bar patch image for end stopping test.
+        """
+        bar_patch = np.zeros((16,26), dtype=np.float32)
+    
+        if is_short:
+            bar_width = 10
+        else:
+            bar_width = 24
+        bar_height = 4
+    
+        for x in range(bar_patch.shape[1]):
+            for y in range(bar_patch.shape[0]):
+                if x >= 26//2 - bar_width//2 and \
+                x < 26//2 + bar_width//2 and \
+                y >= 16//2 - bar_height//2 and \
+                y <= 16//2 + bar_height//2:
+                    bar_patch[y,x] = -1.0
+        return bar_patch * scale
