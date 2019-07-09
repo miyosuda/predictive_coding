@@ -91,7 +91,7 @@ class Dataset:
         g2 = cv2.GaussianBlur(gray, ksize, sigma2)
         return g1 - g2
 
-    def get_bar_image(self, is_short, image_index, scale=2.0, apply_mask=False):
+    def get_bar_image(self, is_short, image_index, scale=2.0, apply_mask=True):
         bar_patch = self.get_bar_patch(is_short, scale)
         x = 5 * image_index
         bar_patch_part = bar_patch[:, x:x+16].reshape([-1])
@@ -109,16 +109,16 @@ class Dataset:
         bar_patch = np.zeros((16,26), dtype=np.float32)
     
         if is_short:
-            bar_width = 10
+            bar_width = 4
         else:
             bar_width = 24
-        bar_height = 4
+        bar_height = 2
     
         for x in range(bar_patch.shape[1]):
             for y in range(bar_patch.shape[0]):
-                if x >= 26//2 - bar_width//2 and \
-                x < 26//2 + bar_width//2 and \
-                y >= 16//2 - bar_height//2 and \
-                y <= 16//2 + bar_height//2:
+                if x >= 26/2 - bar_width/2 and \
+                x < 26/2 + bar_width/2 and \
+                y >= 16/2 - bar_height/2 and \
+                y < 16/2 + bar_height/2:
                     bar_patch[y,x] = 1.0
         return bar_patch * scale
