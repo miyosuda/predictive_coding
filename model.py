@@ -3,10 +3,10 @@ import numpy as np
 
 
 class Model:
-    def __init__(self):
+    def __init__(self, iteration=30):
         self.k1      = 0.0005 # Learning rate for r
         self.k2_init = 0.005  # Initial learning rate for U
-        self.iteration = 30
+        self.iteration = iteration
 
         self.sigma_sq    = 1.0  # Variance of observation distribution of I
         self.sigma_sq_td = 10.0 # Variance of observation distribution of r
@@ -18,7 +18,9 @@ class Model:
         self.Us = (np.random.rand(3,256,32)-0.5) * U_scale
         self.Uh = (np.random.rand(96,128)  -0.5) * U_scale
 
-    def apply_image(self, dataset, image_index, training):
+        self.k2 = self.k2_init
+
+    def apply_image(self, dataset, image_index, training, bar_type=None):
         rs = np.zeros([96],  dtype=np.float32)
         rh = np.zeros([128], dtype=np.float32)
         error_tds = np.zeros([96], dtype=np.float32)
@@ -32,14 +34,20 @@ class Model:
             for j in range(3):
                 # Level1 update
                 # Loop for 3 receptive fields.
-                I = dataset.get_image(image_index, j)
+                if bar_type == None:
+                    # Normal image input
+                    I = dataset.get_image(image_index, j)
+                elif bar_type == "long":
+                    I = dataset.get_bar_image(is_short=False, image_index=j)
+                elif bar_type == "short":
+                    I = dataset.get_bar_image(is_short=True, image_index=j)
                     
                 r    = rs[32*j:32*(j+1)]
                 r_td = r_tds[32*j:32*(j+1)]
                     
                 U  = self.Us[j]
                 Ur = U.dot(r)
-                    
+                
                 error    = I - Ur
                 error_td = r_td - r
                     
@@ -98,5 +106,3 @@ class Model:
         rf[:, 5*1:5*1+16] += UU1
         rf[:, 5*2:5*2+16] += UU2    
         return rf
-
-

@@ -83,12 +83,6 @@ class Dataset:
         # Apply gaussian mask
         return patch[:, x:x+16].reshape([-1]) * self.mask
 
-    def get_bar_image(self, is_short, image_index):
-        bar_patch = self.get_bar_patch(is_short)
-        x = 5 * image_index
-        # TODO: Maskを適用するかどうか要検討
-        return bar_patch[:, x:x+16].reshape([-1])
-
     def apply_DoG_filter(self, gray, ksize=(5,5), sigma1=1.3, sigma2=2.6):
         """
         Apply difference of gaussian (DoG) filter detect edge of the image.
@@ -97,8 +91,19 @@ class Dataset:
         g2 = cv2.GaussianBlur(gray, ksize, sigma2)
         return g1 - g2
 
-    def get_bar_patch(self, is_short, scale=2.0):
-        """ 
+    def get_bar_image(self, is_short, image_index, scale=2.0, apply_mask=False):
+        bar_patch = self.get_bar_patch(is_short, scale)
+        x = 5 * image_index
+        bar_patch_part = bar_patch[:, x:x+16].reshape([-1])
+
+        # TODO: Maskを適用するかどうか要検討
+        if apply_mask:
+            return bar_patch_part * self.mask
+        else:
+            return bar_patch_part
+
+    def get_bar_patch(self, is_short, scale):
+        """
         Get bar patch image for end stopping test.
         """
         bar_patch = np.zeros((16,26), dtype=np.float32)
@@ -115,5 +120,5 @@ class Dataset:
                 x < 26//2 + bar_width//2 and \
                 y >= 16//2 - bar_height//2 and \
                 y <= 16//2 + bar_height//2:
-                    bar_patch[y,x] = -1.0
+                    bar_patch[y,x] = 1.0
         return bar_patch * scale
