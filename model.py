@@ -64,16 +64,16 @@ class Model:
                 error_tds[32*j:32*(j+1)] = error_td
 
             # Level2 update
-            drh = (self.k1 / self.sigma_sq_td) * self.Uh.T.dot(error_tds) \
+            drh = (self.k1 / self.sigma_sq_td) * self.Uh.T.dot(-error_tds) \
                   - self.k1 * self.alpha2 * rh
             rh += drh
 
             if training:
-                dUh = (self.k2 / self.sigma_sq_td) * np.outer(error_tds, rh) \
+                dUh = (self.k2 / self.sigma_sq_td) * np.outer(-error_tds, rh) \
                       - self.k2 * self.lambd * self.Uh
                 self.Uh += dUh
 
-        return rs, rh, error_tds
+        return rs, r_tds, rh, error_tds
 
     def train(self, dataset):
         self.k2 = self.k2_init
@@ -82,7 +82,7 @@ class Model:
 
         for i in range(patch_size):
             # Loop for all patches
-            rs, rh, error_tds = self.apply_image(dataset, i, training=True)
+            rs, r_tds, rh, error_tds = self.apply_image(dataset, i, training=True)
             
             if i % 100 == 0:
                 print("us mean={} std={}".format(np.mean(self.Us[0]), np.std(self.Us[0])))

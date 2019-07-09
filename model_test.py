@@ -12,18 +12,24 @@ class ModeTest(unittest.TestCase):
         model = Model(iteration=1)
         model.train(dataset)
 
-        rs, rh, error_tds = model.apply_image(dataset, 0, training=True, bar_type=None)
+        rs, r_tds, rh, error_tds = model.apply_image(dataset,
+                                                     0, training=True, bar_type=None)
         self.assertEqual(rs.shape, (96,))
+        self.assertEqual(r_tds.shape, (96,))
         self.assertEqual(rh.shape, (128,))
         self.assertEqual(error_tds.shape, (96,))
         
-        rs, rh, error_tds = model.apply_image(dataset, 0, training=False, bar_type="short")
+        rs, r_tds, rh, error_tds = model.apply_image(dataset,
+                                                     0, training=False, bar_type="short")
         self.assertEqual(rs.shape, (96,))
+        self.assertEqual(r_tds.shape, (96,))
         self.assertEqual(rh.shape, (128,))
         self.assertEqual(error_tds.shape, (96,))
 
-        rs, rh, error_tds = model.apply_image(dataset, 0, training=False, bar_type="long")
+        rs, r_tds, rh, error_tds = model.apply_image(dataset,
+                                                     0, training=False, bar_type="long")
         self.assertEqual(rs.shape, (96,))
+        self.assertEqual(r_tds.shape, (96,))
         self.assertEqual(rh.shape, (128,))
         self.assertEqual(error_tds.shape, (96,))
 
