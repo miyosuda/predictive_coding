@@ -12,9 +12,11 @@ def main():
     model = Model()
     model.train(dataset)
 
+    model.save("saved")
+
     if not os.path.exists("result"):
         os.mkdir("result")
-
+    
     for i in range(32):
         u1 = model.Us[1][:,i].reshape(16,16)
         u1 = cv2.resize(u1, None, fx=4, fy=4, interpolation=cv2.INTER_NEAREST)

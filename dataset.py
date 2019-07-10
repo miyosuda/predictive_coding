@@ -9,12 +9,15 @@ class Dataset:
         self.mask = self.create_gauss_mask()
 
     def load_images(self, scale):
-        images = np.empty([5,408,512])
+        images = []
+        dir_name = "images_org"
+        #dir_name = "images_brd"
         
-        for i in range(len(images)):
-            image = cv2.imread("data/images_rao/image{}.png".format(i))
+        for i in range(5):
+            image = cv2.imread("data/{}/image{}.png".format(dir_name, i))
             image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY).astype(np.float32)
-            images[i] = image
+            images.append(image)
+        images = np.array(images)
         self.load_sub(images, scale)
 
     def create_gauss_mask(self, sigma=0.4):
@@ -69,19 +72,18 @@ class Dataset:
         patches = patches * scale
         self.patches = patches
 
-    def get_image(self, patch_index, image_index):
-        """
-        Arguments:
-          patch_index: index of the patch
-          image_index: 0,1,2
+    def get_images_from_patch(self, patch):
+        images = []
+        for i in range(3):
+            x = 5 * i
+            # Apply gaussian mask
+            image = patch[:, x:x+16].reshape([-1]) * self.mask
+            images.append(image)
+        return images
 
-        Returns:
-          nd-array: (256,)
-        """
+    def get_images(self, patch_index):
         patch = self.patches[patch_index]
-        x = 5 * image_index
-        # Apply gaussian mask
-        return patch[:, x:x+16].reshape([-1]) * self.mask
+        return self.get_images_from_patch(patch)
 
     def apply_DoG_filter(self, gray, ksize=(5,5), sigma1=1.3, sigma2=2.6):
         """
@@ -91,25 +93,18 @@ class Dataset:
         g2 = cv2.GaussianBlur(gray, ksize, sigma2)
         return g1 - g2
 
-    def get_bar_image(self, is_short, image_index, scale=2.0, apply_mask=True):
-        bar_patch = self.get_bar_patch(is_short, scale)
-        x = 5 * image_index
-        bar_patch_part = bar_patch[:, x:x+16].reshape([-1])
+    def get_bar_images(self, is_short):
+        patch = self.get_bar_patch(is_short)
+        return self.get_images_from_patch(patch)
 
-        # TODO: Maskを適用するかどうか要検討
-        if apply_mask:
-            return bar_patch_part * self.mask
-        else:
-            return bar_patch_part
-
-    def get_bar_patch(self, is_short, scale):
+    def get_bar_patch(self, is_short):
         """
         Get bar patch image for end stopping test.
         """
         bar_patch = np.zeros((16,26), dtype=np.float32)
     
         if is_short:
-            bar_width = 4
+            bar_width = 6
         else:
             bar_width = 24
         bar_height = 2
@@ -121,4 +116,9 @@ class Dataset:
                 y >= 16/2 - bar_height/2 and \
                 y < 16/2 + bar_height/2:
                     bar_patch[y,x] = 1.0
-        return bar_patch * scale
+
+        # Sete scale with stddev of all patch images.
+        scale = np.std(self.patches)
+        # Original scaling value for bar
+        bar_scale = 2.0
+        return bar_patch * scale * bar_scale
