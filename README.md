@@ -4,6 +4,13 @@ A third-party reimplementation of the paper: ["Predictive Coding in the Visual C
 
 
 
+## Network
+
+Network image from Rao's original paper:
+![network](docs/figures/network.png)
+
+
+
 ## Results
 
 
@@ -21,7 +28,7 @@ A third-party reimplementation of the paper: ["Predictive Coding in the Visual C
 
 ### End stopping
 
-Visualization of the prediction errors (r - r^td) at the center level1 module.
+Visualization of the prediction errors (r - r^td) at the center level1 module with long and short bar image input.
 
 The prediction errors for the long bar should be much more smaller, they are not smaller compared with the original paper's result.
 
