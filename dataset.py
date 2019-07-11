@@ -4,8 +4,13 @@ import cv2
 
 
 class Dataset:
-    def __init__(self, scale=10.0):
+    def __init__(self, scale=10.0, shuffle=False):
         self.load_images(scale)
+
+        if shuffle:
+            indices = np.random.permutation(len(self.patches))
+            self.patches = self.patches[indices]
+        
         self.mask = self.create_gauss_mask()
 
     def load_images(self, scale):

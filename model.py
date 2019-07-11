@@ -4,22 +4,27 @@ import os
 
 
 class Model:
-    def __init__(self, iteration=30):
+    def __init__(self, iteration=30, use_prior=True):
+        self.iteration = iteration
+        self.use_prior = use_prior
+        
         self.k1      = 0.0005 # Learning rate for r
         self.k2_init = 0.005  # Initial learning rate for U
-        self.iteration = iteration
 
         self.sigma_sq    = 1.0  # Variance of observation distribution of I
         self.sigma_sq_td = 10.0 # Variance of observation distribution of r
         self.alpha1      = 1.0  # Precision param of r prior    (var=1.0,  std=1.0)
         self.alpha2      = 0.05 # Precision param of r_td prior (var=20.0, std=4.5)
-        self.lambd       = 0.02 # Precision param of U prior    (var=50.0, std=7.1)
+        #self.lambd       = 0.02 # Precision param of U prior    (var=50.0, std=7.1)
+        self.lambd       = 0.00001 # Precision param of U prior    (var=50.0, std=7.1)
         
         U_scale = 7.0
         self.Us = (np.random.rand(3,256,32) - 0.5) * U_scale
         self.Uh = (np.random.rand(96,128)   - 0.5) * U_scale
 
         self.k2 = self.k2_init
+
+        self.level2_lr_scale = 10.0
 
     def apply_images(self, images, training):
         rs = np.zeros([96],  dtype=np.float32)
@@ -45,8 +50,9 @@ class Model:
                 error_td = r_td - r
                     
                 dr = (self.k1/self.sigma_sq) * U.T.dot(error) + \
-                     (self.k1/self.sigma_sq_td) * error_td \
-                     - self.k1 * self.alpha1 * r
+                     (self.k1/self.sigma_sq_td) * error_td
+                if self.use_prior:
+                    dr -= self.k1 * self.alpha1 * r
                 if training:
                     dU = (self.k2/self.sigma_sq) * np.outer(error, r) \
                          - self.k2 * self.lambd * U
@@ -56,11 +62,12 @@ class Model:
                 error_tds[32*j:32*(j+1)] = error_td
 
             # Level2 update
-            drh = (self.k1 / self.sigma_sq_td) * self.Uh.T.dot(-error_tds) \
-                  - self.k1 * self.alpha2 * rh
+            drh = (self.k1*self.level2_lr_scale / self.sigma_sq_td) * self.Uh.T.dot(-error_tds)
+            if self.use_prior:
+                drh -= self.k1*self.level2_lr_scale * self.alpha2 * rh
             if training:
-                dUh = (self.k2 / self.sigma_sq_td) * np.outer(-error_tds, rh) \
-                      - self.k2 * self.lambd * self.Uh
+                dUh = (self.k2*self.level2_lr_scale / self.sigma_sq_td) * np.outer(-error_tds, rh) \
+                      - self.k2*self.level2_lr_scale * self.lambd * self.Uh
                 # (96,128)
                 self.Uh += dUh
             rh += drh
@@ -87,11 +94,6 @@ class Model:
                 # Decay learning rate for U
                 self.k2 = self.k2 / 1.015
 
-            #..
-            #if i == 500:
-            #    break
-            #..            
-        
         print("train finished")
 
     def reconstruct(self, r, level=1):
