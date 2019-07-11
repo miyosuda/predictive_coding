@@ -7,6 +7,7 @@ A third-party reimplementation of the paper: ["Predictive Coding in the Visual C
 ## Network
 
 Network image from Rao's original paper:
+
 ![network](docs/figures/network.png)
 
 
