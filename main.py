@@ -9,7 +9,7 @@ from model import Model
 
 def main():
     dataset = Dataset(scale=1.0, shuffle=False)
-    model = Model(use_prior=True)
+    model = Model()
     model.train(dataset)
 
     model.save("saved")

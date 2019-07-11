@@ -4,9 +4,8 @@ import os
 
 
 class Model:
-    def __init__(self, iteration=30, use_prior=True):
+    def __init__(self, iteration=30):
         self.iteration = iteration
-        self.use_prior = use_prior
         
         self.k1      = 0.0005 # Learning rate for r
         self.k2_init = 0.005  # Initial learning rate for U
@@ -51,9 +50,7 @@ class Model:
                 error_td = r_td - r
                     
                 dr = (self.k1/self.sigma_sq) * U.T.dot(error) + \
-                     (self.k1/self.sigma_sq_td) * error_td
-                if self.use_prior:
-                    dr -= self.k1 * self.alpha1 * r
+                     (self.k1/self.sigma_sq_td) * error_td - self.k1 * self.alpha1 * r
                 if training:
                     dU = (self.k2/self.sigma_sq) * np.outer(error, r) \
                          - self.k2 * self.lambd1 * U
@@ -63,9 +60,8 @@ class Model:
                 error_tds[32*j:32*(j+1)] = error_td
 
             # Level2 update
-            drh = (self.k1*self.level2_lr_scale / self.sigma_sq_td) * self.Uh.T.dot(-error_tds)
-            if self.use_prior:
-                drh -= self.k1*self.level2_lr_scale * self.alpha2 * rh
+            drh = (self.k1*self.level2_lr_scale / self.sigma_sq_td) * self.Uh.T.dot(-error_tds) \
+                  - self.k1*self.level2_lr_scale * self.alpha2 * rh
             if training:
                 dUh = (self.k2*self.level2_lr_scale / self.sigma_sq_td) * np.outer(-error_tds, rh) \
                       - self.k2*self.level2_lr_scale * self.lambd2 * self.Uh

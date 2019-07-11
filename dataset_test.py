@@ -7,8 +7,7 @@ from dataset import Dataset
 class DatasetTest(unittest.TestCase):
     def test_init(self):
         dataset = Dataset(scale=10.0, shuffle=True)
-        #patch_size = 2375
-        patch_size = 3040
+        patch_size = 2375
         self.assertEqual(dataset.patches.shape, (patch_size,16,26))
 
         images = dataset.get_images(0)

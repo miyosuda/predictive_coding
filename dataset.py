@@ -4,8 +4,8 @@ import cv2
 
 
 class Dataset:
-    def __init__(self, scale=10.0, shuffle=False):
-        self.load_images(scale)
+    def __init__(self, scale=10.0, shuffle=False, use_rao=True):
+        self.load_images(scale, use_rao)
 
         if shuffle:
             indices = np.random.permutation(len(self.patches))
@@ -13,9 +13,14 @@ class Dataset:
         
         self.mask = self.create_gauss_mask()
 
-    def load_images(self, scale):
+    def load_images(self, scale, use_rao):
         images = []
-        dir_name = "images_org"
+
+        if use_rao:
+            # Use images from the paper
+            dir_name = "images_rao"
+        else:
+            dir_name = "images_org"
         
         for i in range(5):
             image = cv2.imread("data/{}/image{}.png".format(dir_name, i))
