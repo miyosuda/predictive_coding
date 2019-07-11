@@ -8,8 +8,7 @@ from dataset import Dataset
 from model import Model
 
 def main():
-    #dataset = Dataset(scale=1.0, shuffle=True)
-    dataset = Dataset(scale=5.0, shuffle=True)
+    dataset = Dataset(scale=1.0, shuffle=False)
     model = Model(use_prior=True)
     model.train(dataset)
 

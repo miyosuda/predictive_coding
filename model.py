@@ -15,8 +15,8 @@ class Model:
         self.sigma_sq_td = 10.0 # Variance of observation distribution of r
         self.alpha1      = 1.0  # Precision param of r prior    (var=1.0,  std=1.0)
         self.alpha2      = 0.05 # Precision param of r_td prior (var=20.0, std=4.5)
-        #self.lambd       = 0.02 # Precision param of U prior    (var=50.0, std=7.1)
-        self.lambd       = 0.00001 # Precision param of U prior    (var=50.0, std=7.1)
+        self.lambd1      = 0.02 # Precision param of U prior    (var=50.0, std=7.1)
+        self.lambd2      = 0.00001 # Precision param of Uh prior
         
         U_scale = 7.0
         self.Us = (np.random.rand(3,256,32) - 0.5) * U_scale
@@ -24,6 +24,7 @@ class Model:
 
         self.k2 = self.k2_init
 
+        # Scaling parameter for learning rate of level2
         self.level2_lr_scale = 10.0
 
     def apply_images(self, images, training):
@@ -55,7 +56,7 @@ class Model:
                     dr -= self.k1 * self.alpha1 * r
                 if training:
                     dU = (self.k2/self.sigma_sq) * np.outer(error, r) \
-                         - self.k2 * self.lambd * U
+                         - self.k2 * self.lambd1 * U
                     self.Us[j] += dU
                 rs[32*j:32*(j+1)] += dr
                     
@@ -67,7 +68,7 @@ class Model:
                 drh -= self.k1*self.level2_lr_scale * self.alpha2 * rh
             if training:
                 dUh = (self.k2*self.level2_lr_scale / self.sigma_sq_td) * np.outer(-error_tds, rh) \
-                      - self.k2*self.level2_lr_scale * self.lambd * self.Uh
+                      - self.k2*self.level2_lr_scale * self.lambd2 * self.Uh
                 # (96,128)
                 self.Uh += dUh
             rh += drh

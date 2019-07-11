@@ -16,7 +16,6 @@ class Dataset:
     def load_images(self, scale):
         images = []
         dir_name = "images_org"
-        #dir_name = "images_brd"
         
         for i in range(5):
             image = cv2.imread("data/{}/image{}.png".format(dir_name, i))
@@ -77,12 +76,14 @@ class Dataset:
         patches = patches * scale
         self.patches = patches
 
-    def get_images_from_patch(self, patch):
+    def get_images_from_patch(self, patch, use_mask=True):
         images = []
         for i in range(3):
             x = 5 * i
             # Apply gaussian mask
-            image = patch[:, x:x+16].reshape([-1]) * self.mask
+            image = patch[:, x:x+16].reshape([-1])
+            if use_mask:
+                image = image * self.mask
             images.append(image)
         return images
 
@@ -100,13 +101,13 @@ class Dataset:
 
     def get_bar_images(self, is_short):
         patch = self.get_bar_patch(is_short)
-        return self.get_images_from_patch(patch)
+        return self.get_images_from_patch(patch, use_mask=True)
 
     def get_bar_patch(self, is_short):
         """
         Get bar patch image for end stopping test.
         """
-        bar_patch = np.zeros((16,26), dtype=np.float32)
+        bar_patch = np.ones((16,26), dtype=np.float32)
     
         if is_short:
             bar_width = 6
@@ -120,7 +121,7 @@ class Dataset:
                 x < 26/2 + bar_width/2 and \
                 y >= 16/2 - bar_height/2 and \
                 y < 16/2 + bar_height/2:
-                    bar_patch[y,x] = 1.0
+                    bar_patch[y,x] = -1.0
 
         # Sete scale with stddev of all patch images.
         scale = np.std(self.patches)
